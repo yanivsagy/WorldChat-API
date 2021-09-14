@@ -11,11 +11,11 @@ exports.getAbout = (req, res) => {
         if (err || !user) {
             return res.status(400).json({
                 error: 'User not found.'
-            })
+            });
         }
 
-        const { username, language, about } = user;
-        const aboutData = { username, language, about };
+        const { name, username, language, about } = user;
+        const aboutData = { name, username, language, about };
 
         return res.json(aboutData);
     });
@@ -28,13 +28,10 @@ exports.getLocation = (req, res) => {
         if (err || !user) {
             return res.status(400).json({
                 error: 'User not found.'
-            })
+            });
         }
 
-        const { street, city, country, zip } = user.location;
-        const locationData = { street, city, country, zip };
-
-        return res.json(locationData);
+        return res.json(user.location);
     });
 };
 
@@ -45,7 +42,7 @@ exports.getPhoto = (req, res) => {
         if (err || !user) {
             return res.status(400).json({
                 error: 'User not found.'
-            })
+            });
         }
 
         if (user.photo && user.photo.data) {
@@ -66,6 +63,29 @@ exports.editAbout = (req, res) => {
         if (err) {
             return res.status(400).json({
                 error: 'Information could not be updated.'
+            });
+        }
+
+        const { name, username, language } = fields;
+
+        if (!name) {
+            return res.status(400).json({
+                error: 'Name is required.'
+            });
+        }
+        if (!username) {
+            return res.status(400).json({
+                error: 'Username is required.'
+            });
+        }
+        if (username.includes(" ")) {
+            return res.status(400).json({
+                error: 'Username cannot include a space.'
+            });
+        }
+        if (!language) {
+            return res.status(400).json({
+                error: 'Language is required.'
             });
         }
 
@@ -101,6 +121,14 @@ exports.editLocation = (req, res) => {
             });
         }
 
+        const { country } = fields;
+
+        if (!country) {
+            return res.status(400).json({
+                error: 'Country is required.'
+            });
+        }
+
         let user = req.profile;
         location = _.extend(user.location, fields);
         user.location = location;
@@ -128,7 +156,7 @@ exports.editLocation = (req, res) => {
     });
 };
 
-exports.editPhoto = (req, res) => {
+exports.uploadPhoto = (req, res) => {
     let form = new formidable.IncomingForm();
     form.keepExtensions = true;
 
@@ -170,21 +198,60 @@ exports.editPhoto = (req, res) => {
                         });
                     });
             })
-        } else {
-            let user = req.profile;
-            user.photo = undefined;
-
-            return user.save()
-                .then(user => {
-                    return res.json({
-                        message: 'Profile photo successfully removed!'
-                    });
-                })
-                .catch(err => {
-                    return res.status(401).json({
-                        error: 'Could not save updates. Please try again.'
-                    });
-                });
         }
+    });
+};
+
+exports.removePhoto = (req, res) => {
+    const _id = req.auth._id;
+
+    User.updateOne({ _id }, { $unset: { photo: '' } }).exec((err, user) => {
+        if (err) {
+            return res.status(401).json({
+                error: 'Could not save updates. Please try again.'
+            });
+        }
+
+        return res.json({
+            message: 'Profile photo successfully removed!'
+        });
+    });
+};
+
+exports.listProfiles = (req, res) => {
+    const coordinates = req.body.coordinates;
+
+    let arrCoordinates = coordinates.split('&');
+    lat = parseFloat(arrCoordinates[0].substring(4));
+    lng = parseFloat(arrCoordinates[1].substring(4));
+
+    return User.find({
+        $and: [{ "location.latitude": lat }, { "location.longitude": lng }]
+    })
+        .select('name username')
+        .exec((err, users) => {
+            if (err || !users) {
+                return res.status(400).json({
+                    error: "Could not find users at the specified coordinates."
+                });
+            }
+
+            return res.json(users);
+        });
+}
+
+exports.getProfile = (req, res) => {
+    const username = req.params.username;
+
+    return User.findOne({ username }).exec((err, user) => {
+        if (err || !user) {
+            return res.status(400).json({
+                error: 'User not found.'
+            })
+        }
+
+        user.photo = undefined;
+
+        return res.json(user);
     });
 };

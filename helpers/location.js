@@ -21,6 +21,9 @@ exports.updateLocation = (locationData) => {
     if (locationData.city) {
         geocodingAPICall += '+' + locationData.city.replace(/ /g, '+') + ',';
     }
+    if (locationData.state) {
+        geocodingAPICall += '+' + locationData.state.replace(/ /g, '+') + ',';
+    }
     if (locationData.country) {
         geocodingAPICall += '+' + locationData.country.replace(/ /g, '+') + ',';
     }

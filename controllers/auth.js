@@ -67,10 +67,15 @@ exports.signup = (req, res) => {
                 .then(data => {
                     const location = {
                         country: data.country_name,
+                        state: data.state,
                         city: data.city,
                         zip: data.postal,
                         latitude: parseFloat(data.latitude),
                         longitude: parseFloat(data.longitude),
+                        defaultCountry: data.country_name,
+                        defaultState: data.state,
+                        defaultCity: data.city,
+                        defaultZip: data.postal,
                         defaultLat: parseFloat(data.latitude),
                         defaultLong: parseFloat(data.longitude)
                     };

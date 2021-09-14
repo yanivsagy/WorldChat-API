@@ -50,6 +50,9 @@ const userSchema = new mongoose.Schema({
         country: {
             type: String
         },
+        state: {
+            type: String
+        },
         city: {
             type: String
         },
@@ -60,6 +63,18 @@ const userSchema = new mongoose.Schema({
             type: Number
         },
         longitude: {
+            type: Number
+        },
+        defaultCountry: {
+            type: String
+        },
+        defaultState: {
+            type: String
+        },
+        defaultCity: {
+            type: String
+        },
+        defaultZip: {
             type: Number
         },
         defaultLat: {
